@@ -1,3 +1,5 @@
+> **Execution split.** Tasks marked **[HUMAN]** require repository-admin, DigitalOcean, or droplet SSH access, or they trigger real deployments — an automated apply session cannot complete them. Unmarked tasks are repository file changes an apply session can make and verify locally. Group 2's verification commands require a machine with Docker Compose >= 2.24.
+
 ## 1. Preserve Inherited Workflows
 
 - [ ] 1.1 `git mv` all 30 files from `.github/workflows/` to `.github/workflows-disabled/`; verify `ls .github/workflows/` contains no inherited workflow and `git status` reports renames rather than delete/add pairs
@@ -16,20 +18,20 @@
 
 ## 4. Operator Documentation
 
-- [ ] 4.1 Create `vera-docs/deployment.md` covering droplet prerequisites (Docker Engine, Compose >= 2.24, git, sudo-capable deploy user, runner public key, 1-2 GiB swap, operator-owned `.env` with `DOMAIN_CLIENT`/`DOMAIN_SERVER` and `NODE_OPTIONS`), the exact GitHub Environment secret names, dispatch and rollback instructions, and the Actions enablement sequence; verify the documented secret names match every `secrets.*` reference in both workflows
+- [ ] 4.1 Create `vera-docs/deployment.md` covering droplet prerequisites (Docker Engine, Compose >= 2.24, git, sudo-capable deploy user, a deploy key pair (public key installed on each droplet, private key stored in the environment secret), 1-2 GiB swap, operator-owned `.env` with `DOMAIN_CLIENT`/`DOMAIN_SERVER` and `NODE_OPTIONS`), the exact GitHub Environment secret names, dispatch and rollback instructions, and the Actions enablement sequence; verify the documented secret names match every `secrets.*` reference in both workflows
 - [ ] 4.2 Create `vera-docs/fork-workflow.md` documenting the fork's remotes (`origin` = `rockstardevelopment/vera-chat`, `upstream` = `danny-avila/LibreChat`), branch roles (`main` release, `dev` integration, `feature/*` work), bootstrapping `dev` from a synced `main`, the feature/branch/PR loop (`gh pr create --base dev`), periodic `git merge upstream/main` into `dev` (never `upstream/dev`), the fast-forward-only `main` invariant (no direct commits, no force-pushes), conflict hotspots (moved workflows, lockfiles, `librechat.yaml`), and a link to `vera-docs/deployment.md`; cross-reference `CLAUDE.md`'s existing "Branching and Pull Requests" section instead of duplicating it; verify the doc names every remote and branch the workflows reference and that `CLAUDE.md` and `AGENTS.md` show no changes in `git status --short`
 
-## 5. Repository and Droplet Setup
+## 5. Repository and Droplet Setup (operator, after the apply session)
 
-- [ ] 5.1 Create the `development` and `production` GitHub Environments and populate `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY`, `DROPLET_KNOWN_HOSTS` (and `DROPLET_PORT` if non-standard); verify each environment appears in repository settings with its secrets
-- [ ] 5.2 Provision both $4 droplets per `vera-docs/deployment.md`; verify `docker compose version` reports >= 2.24, `swapon --show` reports an active swap file, and the deploy user can run Docker
-- [ ] 5.3 After the workflow move is on `main`, enable Actions; verify the Actions tab registers only the development and production deployment workflows
+- [ ] 5.1 **[HUMAN]** Create the `development` and `production` GitHub Environments and populate `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY`, `DROPLET_KNOWN_HOSTS` (and `DROPLET_PORT` if non-standard); secret values are supplied by the operator (`gh secret set` may be used as a convenience); verify each environment appears in repository settings with its secrets
+- [ ] 5.2 **[HUMAN]** Provision both $4 droplets per `vera-docs/deployment.md`; verify `docker compose version` reports >= 2.24, `swapon --show` reports an active swap file, and the deploy user can run Docker
+- [ ] 5.3 **[HUMAN]** After the workflow move is on `main`, enable Actions; verify the Actions tab registers only the development and production deployment workflows
 
-## 6. End-to-End Verification
+## 6. End-to-End Verification (operator, after group 5)
 
-- [ ] 6.1 Dispatch the development workflow from a `feature/*` ref; verify the run succeeds, the droplet serves `/health`, and `docker ps` lists only the API container
-- [ ] 6.2 Dispatch the development workflow from `main`; verify the run fails in the guard before the build job starts
-- [ ] 6.3 Dispatch the production workflow from `main`; verify the run succeeds, the deployed image tag contains the full commit SHA, and `/health` responds
-- [ ] 6.4 Dispatch production with an older commit reachable from `main` in `commit_sha`; verify the build is skipped when its image exists, and the droplet checkout, configuration, and running image all describe that commit
-- [ ] 6.5 Verify on both droplets that `.env` is byte-identical before and after a deploy (compare a hash taken around a run) and that no inherited workflow has ever run in the Actions history
-- [ ] 6.6 Dispatch production with a non-existent commit and with a commit not reachable from `main`; verify each run fails before the build job
+- [ ] 6.1 **[HUMAN]** Dispatch the development workflow from a `feature/*` ref; verify the run succeeds, the droplet serves `/health`, and `docker ps` lists only the API container
+- [ ] 6.2 **[HUMAN]** Dispatch the development workflow from `main`; verify the run fails in the guard before the build job starts
+- [ ] 6.3 **[HUMAN]** Dispatch the production workflow from `main`; verify the run succeeds, the deployed image tag contains the full commit SHA, and `/health` responds
+- [ ] 6.4 **[HUMAN]** Dispatch production with an older commit reachable from `main` in `commit_sha`; verify the build is skipped when its image exists, and the droplet checkout, configuration, and running image all describe that commit
+- [ ] 6.5 **[HUMAN]** Verify on both droplets that `.env` is byte-identical before and after a deploy (compare a hash taken around a run) and that no inherited workflow has ever run in the Actions history
+- [ ] 6.6 **[HUMAN]** Dispatch production with a non-existent commit and with a commit not reachable from `main`; verify each run fails before the build job
