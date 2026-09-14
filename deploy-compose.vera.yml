@@ -1,0 +1,21 @@
+services:
+  api:
+    image: ${VERA_API_IMAGE:?VERA_API_IMAGE is required}
+    environment:
+      # Undo upstream's service-level default so the droplet .env decides.
+      - MONGO_URI=${MONGO_URI}
+    # Upstream's declared dependents are profile-gated off in this overlay.
+    depends_on: !reset []
+
+  mongodb:
+    profiles: [bundled-mongo]
+  meilisearch:
+    profiles: [search]
+  rag_api:
+    profiles: [rag]
+  vectordb:
+    profiles: [rag]
+  admin-panel:
+    profiles: [admin]
+  client:
+    profiles: [proxy]
