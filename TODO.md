@@ -1,0 +1,2 @@
+- [ ] add branches protection
+- [ ] create proposal for production deployment
