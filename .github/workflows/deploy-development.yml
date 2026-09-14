@@ -1,0 +1,177 @@
+name: Deploy Development
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Commit SHA to deploy; empty uses the dispatched ref's commit.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-development
+  cancel-in-progress: false
+
+env:
+  REGISTRY_IMAGE: ghcr.io/rockstardevelopment/vera-chat-api
+
+jobs:
+  guard:
+    name: Guard ref and resolve commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Enforce feature/* ref
+        if: ${{ !startsWith(github.ref_name, 'feature/') }}
+        run: |
+          echo "::error title=Ref guard::Development deployments must be dispatched from a feature/* ref; got '${GITHUB_REF_NAME}'."
+          exit 1
+
+      - name: Resolve commit
+        id: resolve
+        env:
+          INPUT_SHA: ${{ inputs.commit_sha }}
+        run: |
+          set -euo pipefail
+          sha="${INPUT_SHA:-${GITHUB_SHA}}"
+          if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+            echo "::error title=Unknown commit::Commit '${sha}' does not exist in this repository."
+            exit 1
+          fi
+          resolved="$(git rev-parse "${sha}^{commit}")"
+          echo "Resolved commit: ${resolved}"
+          echo "sha=${resolved}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build API image
+    needs: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out resolved commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.guard.outputs.sha }}
+
+      - name: Log in to the container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Compute build timestamp
+        id: build-date
+        run: echo "value=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether the commit image exists
+        id: image
+        env:
+          SHA: ${{ needs.guard.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if docker buildx imagetools inspect "${REGISTRY_IMAGE}:sha-${SHA}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "${REGISTRY_IMAGE}:sha-${SHA} already exists; skipping the build."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push API image
+        if: ${{ steps.image.outputs.exists != 'true' }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile.multi
+          target: api-build
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.REGISTRY_IMAGE }}:sha-${{ needs.guard.outputs.sha }}
+            ${{ env.REGISTRY_IMAGE }}:dev
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_IMAGE }}:buildcache,mode=max
+          build-args: |
+            BUILD_COMMIT=${{ needs.guard.outputs.sha }}
+            BUILD_BRANCH=${{ github.ref_name }}
+            BUILD_DATE=${{ steps.build-date.outputs.value }}
+
+  deploy:
+    name: Deploy to development
+    needs: [guard, build]
+    runs-on: ubuntu-latest
+    environment: development
+    timeout-minutes: 15
+    steps:
+      - name: Converge droplet and roll out
+        env:
+          DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+          DROPLET_USER: ${{ secrets.DROPLET_USER }}
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+          DROPLET_KNOWN_HOSTS: ${{ secrets.DROPLET_KNOWN_HOSTS }}
+          DROPLET_PORT: ${{ secrets.DROPLET_PORT }}
+          RESOLVED_SHA: ${{ needs.guard.outputs.sha }}
+        run: |
+          set -euo pipefail
+          port="${DROPLET_PORT:-22}"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$DROPLET_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DROPLET_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          image="${REGISTRY_IMAGE}:sha-${RESOLVED_SHA}"
+          ssh -i ~/.ssh/deploy_key -p "$port" \
+            -o IdentitiesOnly=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -o StrictHostKeyChecking=yes \
+            "$DROPLET_USER@$DROPLET_HOST" \
+            bash -s -- "$RESOLVED_SHA" "$image" <<'REMOTE'
+          set -euo pipefail
+          sha="$1"
+          image="$2"
+          repo_dir="/opt/vera-chat"
+
+          if [ ! -d "$repo_dir/.git" ]; then
+            mkdir -p "$repo_dir"
+            git -C "$repo_dir" init
+            git -C "$repo_dir" remote add origin https://github.com/rockstardevelopment/vera-chat.git
+          fi
+
+          git -C "$repo_dir" fetch origin --prune
+          git -C "$repo_dir" checkout -f "$sha"
+          git -C "$repo_dir" reset --hard "$sha"
+          cd "$repo_dir"
+
+          export VERA_API_IMAGE="$image"
+          docker compose -f deploy-compose.yml -f deploy-compose.vera.yml pull api
+          docker compose -f deploy-compose.yml -f deploy-compose.vera.yml up -d --wait
+
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3080/health >/dev/null; then
+              echo "Health check passed after ${attempt} attempt(s)."
+              docker image prune -af >/dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Service did not become healthy within 120s of the rollout." >&2
+          exit 1
+          REMOTE
