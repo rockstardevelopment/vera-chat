@@ -1,2 +1,6 @@
 - [ ] add branches protection
+- [ ] merge to main easily
 - [ ] create proposal for production deployment
+- [ ] teraform deployment
+- [ ] question regards .env storage
+- [ ] archive spec
