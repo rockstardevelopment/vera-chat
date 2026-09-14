@@ -28,19 +28,48 @@ Deployment SHALL be triggered only by explicit manual dispatch, and SHALL verify
 - **WHEN** an operator dispatches the production deployment from any ref other than `main`
 - **THEN** the run fails before building or contacting any droplet
 
+### Requirement: Explicit commit selection
+
+Each deployment SHALL accept an optional commit input. When the input is empty, the deployed commit SHALL be the dispatched ref's commit; when present, it MUST name a commit that exists in the repository, and for production that commit MUST be reachable from `main`. An input that is unknown or that fails the production reachability rule MUST abort the run before any build or remote action. The resolved commit SHALL be used consistently for the build checkout, the published image tag, and the droplet checkout. The dispatched-ref guard remains in force regardless of the input.
+
+#### Scenario: Deploy an older production commit
+
+- **WHEN** production is dispatched from `main` with a commit reachable from `main`
+- **THEN** the run builds or reuses that commit's image and deploys matching code and configuration
+
+#### Scenario: Development accepts any existing commit
+
+- **WHEN** development is dispatched from a `feature/*` ref with a commit that exists in the repository
+- **THEN** the run deploys that commit to the development droplet
+
+#### Scenario: Unknown commit rejected
+
+- **WHEN** the input names a commit that does not exist in the repository
+- **THEN** the run fails before building
+
+#### Scenario: Production rejects an unreachable commit
+
+- **WHEN** production is dispatched with a commit not reachable from `main`
+- **THEN** the run fails before building
+
+#### Scenario: Guard applies with a valid input
+
+- **WHEN** development is dispatched from a ref outside `feature/*` with a valid commit input
+- **THEN** the run still fails on the ref guard before building
+
 ### Requirement: Commit-addressed API image publication
 
-Each deployment SHALL build the fork's API image for the amd64 architecture from the dispatched ref's commit and publish it to the GitHub Container Registry under a tag containing the full commit SHA, alongside a moving environment tag. A previously published commit-addressed image MUST remain deployable without rebuilding.
+Each deployment SHALL build the fork's API image for the amd64 architecture from the resolved commit and publish it to the GitHub Container Registry under a tag containing that commit's full SHA, alongside a moving environment tag. When an image for the resolved commit already exists in the registry, the build MUST be skipped and that image deployed directly. A previously published commit-addressed image MUST remain deployable without rebuilding.
 
-#### Scenario: Image tagged with the deployed commit
+#### Scenario: Image tagged with the resolved commit
 
-- **WHEN** a deployment builds from a ref
+- **WHEN** a deployment resolves a commit and no image exists for it
 - **THEN** the registry contains an amd64 image tagged with that commit's full SHA that the droplet can pull
 
-#### Scenario: Previously published image is addressable
+#### Scenario: Existing image is deployed without rebuilding
 
-- **WHEN** an operator redeploys an older commit's image tag to production
-- **THEN** that image content is deployed without a rebuild
+- **WHEN** an operator selects a commit whose image already exists in the registry
+- **THEN** the build is skipped and that image content is deployed
 
 ### Requirement: Environment-scoped credentials
 
@@ -53,17 +82,22 @@ Credentials and droplet coordinates SHALL be resolved through the GitHub Environ
 
 ### Requirement: Idempotent droplet checkout
 
-Deployment SHALL converge the droplet's repository checkout to the dispatched ref, cloning it when absent and updating it when present, and MUST NOT modify the droplet's operator-owned environment file.
+Deployment SHALL converge the droplet's repository checkout to the resolved commit, cloning it when absent and updating it when present, and MUST NOT modify the droplet's operator-owned environment file.
 
 #### Scenario: First deployment to a bare droplet
 
 - **WHEN** a droplet has no repository checkout yet
-- **THEN** the deployment creates one at the dispatched ref before deploying
+- **THEN** the deployment creates one at the resolved commit before deploying
 
 #### Scenario: Existing checkout updated
 
 - **WHEN** the droplet already has a checkout at a different commit
-- **THEN** the deployment updates it to the dispatched ref's commit before recreating the service
+- **THEN** the deployment updates it to the resolved commit before recreating the service
+
+#### Scenario: Explicit commit converges the checkout
+
+- **WHEN** a deployment selects a commit other than the dispatched ref's head
+- **THEN** the droplet checkout ends at that commit
 
 #### Scenario: Operator configuration preserved
 

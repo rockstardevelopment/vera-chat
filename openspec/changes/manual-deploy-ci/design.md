@@ -7,6 +7,7 @@ See proposal.md for motivation. The constraints that shape the approach:
 - `config/deployed-update.js` documents upstream's VPS pattern — host checkout, operator-owned `.env`, `docker compose pull api && up -d` — and calls out that overriding the `api` image leaves dangling images that nothing reclaims.
 - The application exposes `GET /health` (api/server/index.js:310) and serves the built client from the same container, so a single `api` service can be the entire droplet runtime.
 - Droplets are $4 DigitalOcean Basic (512 MiB RAM, 1 vCPU, 10 GiB SSD, no domain). MongoDB is external (Atlas) as a separate task; `.env` on each droplet is operator-owned. The image build is heavy and must never run on the droplet; Actions minutes are free for public repositories.
+- `CLAUDE.md` § "Branching and Pull Requests" documents the `dev`/`main`/PR model but assumes `dev` exists and says nothing about syncing the parent repository. Fork-specific workflow documentation lives in `vera-docs/fork-workflow.md`; `CLAUDE.md` and `AGENTS.md` are upstream-owned (11 and 14 edits in the last 200 upstream commits) and stay untouched to avoid recurring merge conflicts.
 
 ## Goals / Non-Goals
 
@@ -45,7 +46,7 @@ See proposal.md for motivation. The constraints that shape the approach:
 
 Each workflow builds `Dockerfile.multi` target `api-build` with `linux/amd64` and pushes to `ghcr.io/rockstardevelopment/vera-chat-api` with tags `sha-<full-sha>` and a moving `dev`/`prod` tag. There are no push-triggered builds: every published image corresponds to a deliberate deploy.
 
-- Production accepts an optional `image_tag` dispatch input. When provided, the build job is skipped and the given `sha-*` tag is deployed, which is the rollback mechanism. A tag that does not resolve fails at pull time on the droplet.
+- Both workflows accept an optional `commit_sha` dispatch input (Decision 9). Before building, the run checks the registry for `sha-<resolved-sha>`; when it exists, the build is skipped and that image is deployed, which is the rollback mechanism.
 - Build args `BUILD_COMMIT`, `BUILD_BRANCH`, and `BUILD_DATE` are passed through as upstream does, so Settings → About can identify the deployed commit.
 - Layer cache uses `type=registry` in GHCR (`mode=max`) rather than `type=gha`: it is readable across branches and avoids the 10 GB Actions cache cap, mirroring upstream's own choice.
 - Alternatives: reusing upstream's `docker-publish.yml` (requires Docker Hub secrets and builds arm64; also moved to the disabled directory); building on the droplet (512 MiB cannot host a LibreChat build).
@@ -79,8 +80,8 @@ services:
 The deploy job writes the environment's SSH key to a temporary file, connects with `DROPLET_KNOWN_HOSTS` pinned (no `StrictHostKeyChecking=no`), and runs:
 
 ```text
-git -C /opt/vera-chat fetch origin <ref> && git checkout -f <ref> && git reset --hard <ref>
-VERA_API_IMAGE=ghcr.io/.../vera-chat-api:sha-<sha> docker compose -f deploy-compose.yml -f deploy-compose.vera.yml pull api
+git -C /opt/vera-chat fetch origin --prune && git checkout -f <resolved-sha> && git reset --hard <resolved-sha>
+VERA_API_IMAGE=ghcr.io/.../vera-chat-api:sha-<resolved-sha> docker compose -f deploy-compose.yml -f deploy-compose.vera.yml pull api
 VERA_API_IMAGE=... docker compose ... up -d --wait
 curl -fsS http://127.0.0.1:3080/health
 docker image prune -f
@@ -106,14 +107,20 @@ GitHub Environments `development` and `production` hold `DROPLET_HOST`, `DROPLET
 
 Atlas moves MongoDB off the droplet, and profile-gating leaves only `api`: roughly 100 MiB OS + 80-120 MiB Docker daemon + 200-300 MiB Node process. That is workable on 512 MiB, but not with headroom, so `vera-docs/deployment.md` requires a 1-2 GiB swap file and `NODE_OPTIONS=--max-old-space-size=320` in the droplet `.env` so V8 garbage-collects instead of being OOM-killed. Upgrading vertically (DO preserves the disk on resize) is the scaling path.
 
+### 9. Explicit commit input with reachability validation
+
+Both workflows accept an optional `commit_sha` input, resolved once in the guard job: empty means the dispatched ref's commit. The guard job fetches the repository and validates the SHA with git plumbing (`git cat-file -e <sha>^{commit}`), and for production additionally `git merge-base --is-ancestor <sha> origin/main`. The resolved SHA then drives the build checkout, the `sha-<resolved-sha>` tag, and the droplet checkout, so code, configuration, and image always describe the same commit; this replaces the earlier `image_tag` design and removes the config-skew risk it carried. The dispatched-ref guard is unchanged and runs before resolution.
+
+- Alternatives: keeping `image_tag` alongside `commit_sha` (two ways to express one intent, and `image_tag` would still deploy configuration from the dispatch ref); deploying only branch heads (no explicit commit); creating a git tag per deployment and dispatching from it (a new ref for every deploy, and tags are outside the guard's allowed refs).
+
 ## Risks / Trade-offs
 
 - [Plain HTTP deploys expose credentials and session tokens in cleartext] → Accepted for a no-domain tryout; treat both environments as non-public until TLS (Cloudflare Tunnel is the cheapest follow-up). Documented in `vera-docs/deployment.md`.
 - [512 MiB OOM under agent/tool spikes] → Swap plus heap cap; the health gate turns an OOM restart loop into a failed deploy instead of a silent outage.
 - [Environment secrets can be reached by anyone who can push a `feature/*` branch and dispatch the development workflow] → Development secrets only ever cover the dev droplet; production dispatch is restricted to `main`, and GitHub Environment protection rules can require review later without changing these artifacts.
-- [The first dispatch requires the workflow to exist on the default branch, and a feature branch can only be selected once it contains the workflow file] → Operational sequencing in the migration plan; if deploying pre-existing branches becomes necessary, a `target_ref` input checked out by the build job is the follow-up.
 - [`!reset` fails on Compose < 2.24] → Minimum version becomes a documented droplet prerequisite; the failure is immediate and legible rather than partial.
-- [Rollback by `image_tag` leaves config at `main` while the image is older] → Acceptable for this scope; a true config rollback is a git revert on `main` followed by a normal dispatch.
+- [A commit predating this change cannot be deployed] → Its checkout has no `deploy-compose.vera.yml`, so the compose command fails legibly; document that only commits at or after this change are deployable. Supporting older commits would need compose files pinned to `main` while checking out the older commit for code.
+- [The first dispatch requires the workflow to exist on the default branch] → Operational sequencing in the migration plan. Pre-existing branches that lack the workflow file remain deployable by dispatching from any branch that carries it with `commit_sha` set to the target commit.
 - [Dangling images accumulate on 10 GiB disks] → Prune after every successful pull; the same problem is documented upstream in `config/deployed-update.js`.
 - [Future upstream merges conflict on the moved workflow paths] → The disabled files are intentionally frozen; conflicts there are mechanical and can be resolved by taking upstream's content into the disabled directory.
 
@@ -124,10 +131,9 @@ Atlas moves MongoDB off the droplet, and profile-gating leaves only `api`: rough
 3. Provision both droplets: Docker Engine + Compose ≥ 2.24, git, a sudo-capable deploy user, the runner's public key, 1-2 GiB swap, and an operator-owned `.env` (`DOMAIN_CLIENT`/`DOMAIN_SERVER` set to `http://<droplet-ip>:3080`, plus `NODE_OPTIONS`). Point `MONGO_URI` at Atlas when that task lands.
 4. Enable Actions for the repository **after** the workflow move is on `main`, so only the two deployment workflows ever register. If Actions is already enabled, disable the inherited workflows via the API while the move merges.
 5. First deploy: dispatch development from a `feature/*` ref and verify `/health`, then dispatch production from `main`.
-6. Rollback: dispatch production with the previous `image_tag` value.
+6. Rollback: dispatch production with a previous commit reachable from `main`; its image is reused when it already exists.
 
 ## Open Questions
 
 - Whether production should require a GitHub Environment approval before deploying — a repository setting, orthogonal to these artifacts.
 - TLS path (Cloudflare Tunnel vs. a domain plus Caddy) — a follow-up change; the compose overlay already profile-gates a proxy service for it.
-- Whether pre-existing `feature/*` branches need deployability before they contain the workflow file — deferred until the first time it matters.
