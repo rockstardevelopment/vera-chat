@@ -23,15 +23,18 @@
 
 ## 5. Repository and Droplet Setup (operator, after the apply session)
 
-- [ ] 5.1 **[HUMAN]** Create the `development` and `production` GitHub Environments and populate `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY`, `DROPLET_KNOWN_HOSTS` (and `DROPLET_PORT` if non-standard); secret values are supplied by the operator (`gh secret set` may be used as a convenience); verify each environment appears in repository settings with its secrets
-- [ ] 5.2 **[HUMAN]** Provision both $4 droplets per `vera-docs/deployment.md`; verify `docker compose version` reports >= 2.24, `swapon --show` reports an active swap file, and the deploy user can run Docker
-- [ ] 5.3 **[HUMAN]** After the workflow move is on `main`, enable Actions; verify the Actions tab registers only the development and production deployment workflows
+- [x] 5.1 **[HUMAN]** Create the `development` GitHub Environment and populate `DROPLET_HOST`, `DROPLET_USER`, `DROPLET_SSH_KEY`, `DROPLET_KNOWN_HOSTS` (and `DROPLET_PORT` if non-standard); secret values are supplied by the operator (`gh secret set` may be used as a convenience); verify the environment appears in repository settings with its secrets
+- [ ] 5.2 **[HUMAN]** Create the `production` GitHub Environment and populate the same secret names; verify the environment appears in repository settings with its secrets
+- [x] 5.3 **[HUMAN]** Provision the development $4 droplet per `vera-docs/deployment.md`; verify `docker compose version` reports >= 2.24, `swapon --show` reports an active swap file, and the deploy user can run Docker
+- [ ] 5.4 **[HUMAN]** Provision the production $4 droplet per `vera-docs/deployment.md`; verify `docker compose version` reports >= 2.24, `swapon --show` reports an active swap file, and the deploy user can run Docker
+- [x] 5.5 **[HUMAN]** After the workflow move is on `main`, enable Actions; verify the Actions tab registers only the development and production deployment workflows
 
 ## 6. End-to-End Verification (operator, after group 5)
 
-- [ ] 6.1 **[HUMAN]** Dispatch the development workflow from a `feature/*` ref; verify the run succeeds, the droplet serves `/health`, and `docker ps` lists only the API container
-- [ ] 6.2 **[HUMAN]** Dispatch the development workflow from `main`; verify the run fails in the guard before the build job starts
+- [x] 6.1 **[HUMAN]** Dispatch the development workflow from a `feature/*` ref; verify the run succeeds, the development droplet serves `/health`, and `docker ps` lists only the API container
+- [x] 6.2 **[HUMAN]** Dispatch the development workflow from `main`; verify the run fails in the guard before the build job starts
 - [ ] 6.3 **[HUMAN]** Dispatch the production workflow from `main`; verify the run succeeds, the deployed image tag contains the full commit SHA, and `/health` responds
 - [ ] 6.4 **[HUMAN]** Dispatch production with an older commit reachable from `main` in `commit_sha`; verify the build is skipped when its image exists, and the droplet checkout, configuration, and running image all describe that commit
-- [ ] 6.5 **[HUMAN]** Verify on both droplets that `.env` is byte-identical before and after a deploy (compare a hash taken around a run) and that no inherited workflow has ever run in the Actions history
-- [ ] 6.6 **[HUMAN]** Dispatch production with a non-existent commit and with a commit not reachable from `main`; verify each run fails before the build job
+- [x] 6.5 **[HUMAN]** Verify on the development droplet that `.env` is byte-identical before and after a deploy (compare a hash taken around a run) and that no inherited workflow has ever run in the Actions history
+- [ ] 6.6 **[HUMAN]** Verify on the production droplet that `.env` is byte-identical before and after a deploy (compare a hash taken around a run)
+- [ ] 6.7 **[HUMAN]** Dispatch production with a non-existent commit and with a commit not reachable from `main`; verify each run fails before the build job

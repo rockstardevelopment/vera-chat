@@ -8,3 +8,4 @@
 - [ ] make repo private
 - [ ] check if firewall is needed
 - [ ] TLS setup
+- [ ] what todo with undone steps in openspec?
