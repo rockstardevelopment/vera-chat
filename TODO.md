@@ -4,3 +4,7 @@
 - [ ] teraform deployment
 - [ ] question regards .env storage
 - [ ] archive spec
+- [ ] librachat.yaml transfer to server
+- [ ] make repo private
+- [ ] check if firewall is needed
+- [ ] TLS setup
