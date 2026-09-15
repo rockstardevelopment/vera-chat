@@ -1,8 +1,10 @@
+# deployment Specification
+
 ## Purpose
 
 Provide a manual, environment-scoped path to build the fork's API image and roll it onto pre-provisioned DigitalOcean droplets without activating any inherited upstream automation.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Ref-guarded manual deployment
 
