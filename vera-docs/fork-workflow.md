@@ -101,3 +101,5 @@ backport pull request to it.
   merges stay conflict-free; fork process documentation lives in `vera-docs/`.
 - `deploy-compose.yml` — untouched by the fork. Fork deployment changes go in the
   `deploy-compose.vera.yml` overlay.
+
+Up: [`vera-docs/index.md`](./index.md) — the documentation map.

@@ -1,32 +1,38 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Per-artifact rules, applied to the artifacts they name.
+rules:
+  proposal:
+    - If the change alters fork-specific process, deployment, or operator workflow, list the exact
+      `vera-docs/` pages to add or update, including the nearest `index.md` updates, in Impact.
+  tasks:
+    - A documentation task names the exact `vera-docs/` page and the `index.md` files on its path;
+      documentation is updated as the work lands, not deferred to archive.
+    - Each task states how it is verified; do not mark a task complete without running that check.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
-
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+# Advisory guidance for the apply and archive operations.
+operations:
+  apply:
+    guidance:
+      - 'Mark a task complete only after its stated verification has actually run and passed. If a
+        task cannot be completed in the session, leave it unchecked and record the blocker in its
+        line instead of checking the box.'
+      - 'Keep `vera-docs/` pages and the nearest `index.md` current as work lands; do not leave
+        documentation to the archive step.'
+  archive:
+    guidance:
+      - "Reconcile every unchecked task before archiving. Done but unchecked — verify the task's
+        stated evidence and check it. Obsolete — annotate the line in place with
+        `— dropped: <reason>`. Still needed — carry it into the successor change."
+      - 'When any work is carried, create the successor change before archiving and annotate each
+        carried task line with `— carried to <successor-name>`; the archived tasks.md must name
+        where the work went.'
+      - "Reconcile delta specs with what actually shipped before syncing: behavior that did not
+        ship moves to the successor change's delta instead of the main specs. Pending operational
+        verification (provisioning, dispatch runs) does not withhold a requirement whose behavior
+        is implemented."
+      - 'Update the affected `vera-docs/` pages and the nearest `index.md` files; when nothing in
+        `vera-docs/` changes, say so in the summary.'
+      - 'The archive summary lists tasks checked, dropped, and carried (with the successor name),
+        specs synced versus withheld and where withheld requirements went, and docs updated versus
+        checked unchanged.'

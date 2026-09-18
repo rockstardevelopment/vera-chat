@@ -1,0 +1,24 @@
+> **Execution split.** Tasks marked **[HUMAN]** need repository-admin access, a real promotion, or a
+> real upstream sync; an apply session cannot complete them. Unmarked tasks are repository file
+> changes an apply session can make and verify locally.
+
+## 1. Promotion Workflow
+
+- [ ] 1.1 Add `.github/workflows/promote-main.yml`: `workflow_dispatch` only; a guard step that fails unless `github.ref_name == 'main'`; `permissions: contents: write` as the sole grant; `concurrency: { group: promote-main, cancel-in-progress: false }`; checkout of `main` with `fetch-depth: 0`; `git fetch origin dev`; an equal-SHA no-op success; a `git merge-base --is-ancestor` failure that reports merging `main` into `dev` as the recovery; `git merge --ff-only origin/dev` followed by `git push origin main`; a step summary printing the previous and new SHAs. Verify `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/promote-main.yml'))"` succeeds and a read-back confirms the guard, the sole `contents: write` grant, and no force-push flag anywhere in the file
+- [ ] 1.2 Reproduce the three promotion cases against a throwaway repository under `/tmp/opencode` (bare origin plus `main` and `dev` clones): equal refs exit without a push, `dev` ahead fast-forwards `main` with no new commit (`git cat-file -t` the old and new heads), and a divergent `main` is rejected with no ref change; verify each case's observed output matches the workflow's intended messages
+
+## 2. Documentation
+
+- [ ] 2.1 Rewrite "Promoting `dev` to `main`" in `vera-docs/fork-workflow.md`: lead with Actions -> "Promote dev to main" -> Run workflow dispatched from `main`; state the bootstrap (the first promotion after landing is local because `workflow_dispatch` needs the file on `main`), the no-op case, the divergence recovery, and keep the local commands as the fallback; verify by reading the section back and checking the workflow name, bootstrap sentence, and recovery sentence are present
+- [ ] 2.2 Rewrite "Syncing upstream" in `vera-docs/fork-workflow.md`: branch `feature/upstream-sync-<upstream-short-sha>` from `origin/dev`, merge `upstream/main` on it, resolve conflicts per the hot spots, push, open the pull request with base `dev`, and merge it with a merge commit; state why squash and rebase are forbidden (ancestry) and that `deploy-development.yml` can deploy the branch before it merges; verify the command block uses the branch name and base `dev`, and the merge-commit requirement appears in prose
+- [ ] 2.3 Update "Branch roles" in `vera-docs/fork-workflow.md` so the `feature/*` bullet covers upstream-sync branches and the feature/PR loop; verify by reading the section back
+- [ ] 2.4 Update "Enabling Actions" in `vera-docs/deployment.md` so the registered list is `Deploy Development`, `Deploy Production`, and `Promote dev to main`, and the page points to `vera-docs/fork-workflow.md` for promotion; verify `grep -n "Promote dev to main" vera-docs/deployment.md` matches and the three names read as the registered set
+- [ ] 2.5 Update the `fork-workflow.md` row of `vera-docs/index.md` to mention the UI promotion action and the pull-request upstream sync; verify the row summarizes both and the link target is unchanged
+
+## 3. Post-Landing Verification (operator)
+
+- [ ] 3.1 **[HUMAN]** Bootstrap: with `main == dev`, perform the first promotion using the documented local fallback; verify the Actions tab lists "Promote dev to main" alongside the two deployment workflows and shows a Run workflow button, confirming the `deployment` registry scenario
+- [ ] 3.2 **[HUMAN]** Dispatch "Promote dev to main" from `main` while `main == dev`; verify the run succeeds, reports both SHAs in the summary, and `git ls-remote origin refs/heads/main` is unchanged
+- [ ] 3.3 **[HUMAN]** After the next feature merges to `dev`, dispatch promotion from `main`; verify `main` now equals `dev`'s head with `git rev-list --count origin/main..origin/dev` reporting 0, the promoted commit is `dev`'s existing head rather than a new commit, and no `deploy-production` run was triggered
+- [ ] 3.4 **[HUMAN]** Verify the settings the flows depend on and record the result: pull requests allow merge commits, the Actions workflow permission level permits `contents: write`, and any `main` protection does not reject the promotion push
+- [ ] 3.5 **[HUMAN]** On the next upstream sync, use the branch and pull-request procedure end to end; verify the pull request targets `dev`, is merged with a merge commit, and `dev` contains the `upstream/main` merge as ancestry (`git merge-base --is-ancestor upstream/main origin/dev`)

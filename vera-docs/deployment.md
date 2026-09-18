@@ -173,3 +173,5 @@ curl -fsS http://<droplet-ip>:3080/health
 The workflow file must exist on the dispatched ref. Branches created before this change do not
 carry it: dispatch from any branch that does (a `feature/*` branch for development, `main` for
 production) and name the target commit in `commit_sha`.
+
+Up: [`vera-docs/index.md`](./index.md) — the documentation map.

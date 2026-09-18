@@ -1,2 +1,11 @@
 - [ ] add branches protection
+- [ ] merge to main easily
 - [ ] create proposal for production deployment
+- [ ] teraform deployment
+- [ ] question regards .env storage
+- [ ] archive spec
+- [ ] librachat.yaml transfer to server
+- [ ] make repo private
+- [ ] check if firewall is needed
+- [ ] TLS setup
+- [ ] what todo with undone steps in openspec?
