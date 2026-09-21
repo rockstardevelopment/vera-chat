@@ -9,3 +9,5 @@
 - [ ] check if firewall is needed
 - [ ] TLS setup
 - [ ] what todo with undone steps in openspec?
+- [ ] prio - what we can, ads, external
+- [ ] review development deployment flow implemented

@@ -78,7 +78,8 @@ honest gap.
 **Monorepo / workspace.**
 One git repository containing several npm packages. This repo has `api` (legacy server wiring),
 `packages/api` (new backend code), `packages/data-schemas` (database), `packages/data-provider`
-(types shared by frontend and backend), `client` (React app). The design adds one more:
+(types shared by frontend and backend), `client` (React app). The design adds the calculator
+package, an MCP server, and a deployment plugin.
 
 **`packages/astrology` — the calculator.**
 A new package containing pure functions. "Pure" means: data in, data out, no database, no HTTP, no
@@ -100,18 +101,38 @@ plain-text summary of `ChartFacts` (e.g. a table of placements plus the aspects 
 today's transits. It is inserted into the model's instructions on every turn. Budgets ("short" vs
 "full" digest) control how much of it goes in, because instructions cost tokens/money.
 
-**`sharedRunContext` — where the digest is injected.**
-LibreChat already has a mechanism for adding run-specific text to the model's system instructions
-(it is used today for file contents and user memories). In code it is assembled in
-`api/server/controllers/agents/client.js` around line 2815. Our design adds one call there: "ask
-`packages/api/src/astrology` for the digest text and append it". The controller stays dumb; the
-astrology logic stays in TypeScript under `packages/api`. That is what "`/api` holds wiring, not
-behavior" means in this repo.
+**How facts and briefs reach the model: a hook plus MCP tools.**
+The design does not modify any upstream LibreChat source file. It uses two extension points that
+already exist:
+
+- **Deployment plugin hook.** A **deployment plugin** is an operator-installed bundle that LibreChat
+  loads at startup (manifest, optional MCP server, skills, hooks). A **hook** is a small script the
+  server runs at a named moment in a run. The `UserPromptSubmit` hook runs when the user's message is
+  submitted, and whatever the script prints to stdout is added to the model's system context as
+  `additionalContext`. Our script asks our own REST API for the digest and prints it. It stays silent
+  for conversations that are not the astrologer's, and it is **fail-open**: if anything goes wrong,
+  the turn continues without the digest.
+- **REST API.** `/api/astrology/*` is one HTTP surface. In the MVP the hook and the MCP server use a
+  service token; the browser JWT mode (profile form, chart card, catalog) is deferred until a hub or
+  settings form exists. The hook calls `POST /api/astrology/context`; the API learns who is asking
+  from the generation job record (which exists even before a brand-new conversation is stored in the
+  database), loads the profile, computes the facts, and returns the digest text.
+- **MCP tool.** **MCP (Model Context Protocol)** is LibreChat's standard way to give a model tools.
+  `packages/astrology-mcp` exposes profile tools (`resolve_birth_place`, `save_birth_data`, …),
+  calculation tools (`get_transits`, `find_windows`, …), and `get_brief`, so the model can collect
+  data and ask for extra calculations mid-conversation. Each tool call is forwarded to the same REST
+  API; the server learns who the user is from the `{{LIBRECHAT_USER_ID}}` placeholder in its
+  configuration.
+
+Why not just put the chart into the agent instructions? Because agent instructions are **static and
+shared by every user**; a chart is personal and its timing half changes daily, so it must arrive per
+turn.
 
 **`packages/api/src/astrology` — the feature adapter.**
 The layer that knows about users, the database, config and caching: load the user's profile, compute
-or fetch cached facts, build the digest, expose HTTP routes (`/api/astrology/profiles`, `/chart`,
-`/transits`). "Adapter" here means it adapts the pure calculator to this specific app.
+or fetch cached facts, build the digest, and expose the REST surface (`/api/astrology/profiles`,
+`/chart`, `/context`, `/transits`, `/windows`). "Adapter" here means it adapts the pure calculator to
+this specific app.
 
 **`AstroProfile` — the stored birth data.**
 A MongoDB record per person whose chart we know: who it belongs to (`user`), their label ("Я",
@@ -137,8 +158,14 @@ new switch must live there with a safe default, so the design adds an `astrology
 In LibreChat, an **agent** is a configured assistant (instructions, tools, model). A **model spec**
 is an entry in the model dropdown, defined in YAML, that can carry a preset — including
 `preset.agent_id`, which pins a specific saved agent. We use that so "Vera the astrologer" is a
-stable, non-editable persona users select, and so the server can recognize astrology conversations
-("effective spec is `vera-astrologer`") and only then inject the digest.
+stable, non-editable persona users select, and so the hook and the REST API can recognize astrology
+conversations by that stable agent id and only then inject the digest.
+
+**Agent instructions and methodology.**
+The behaviour of the astrologer is two versioned repository files seeded into the saved agent. The
+**core instructions** hold the role, the birth-data collection algorithm, the hard truth rules, the
+answer format, and safety. The **methodology Skill** holds the topic frameworks (JS-01/02/11/14),
+the order of chart analysis, and the transit method. Both change only through a pull request.
 
 **Skill.**
 A LibreChat feature: a markdown instruction document the model can load on demand. We use it for the
@@ -150,14 +177,20 @@ This is the quality engine. Instead of trusting the model's memory of astrology 
 means…"), we keep a curated library of small text snippets — **atoms** — keyed by chart combination
 (`sun.in.leo`, `moon.in.4`, `sun.trine.moon`). `composeBrief(facts, jobId)` selects and ranks the
 atoms relevant to the current job and produces a **brief**; the model then writes fluent prose over
-that brief. Benefits: consistent answers, editorial control, easy Russian/English localization, and
-claims can be traced and tested. This is also the biggest content cost, which the design calls out.
+that brief. The brief reaches the model in two parts: the hook digest carries a 3–5 atom **accent**,
+and the full brief is fetched by the `get_brief(jobId)` tool once the model has picked the topic.
+Benefits: consistent answers, editorial control, easy Russian/English localization, and claims can
+be traced and tested. This is also the biggest content cost, which the design calls out.
 
 **The job catalog.**
 The 29 job stories are stored as data records (`JobDefinition`: which profile/transits/period/
-question it needs, its starter prompt, its category, its phase). The hub page renders cards from
-this data; the server consults it to know what context to prepare. Adding a new story should not
-require writing code in multiple places — that is the scalability argument of the design.
+question it needs, its brief tags, its answer skeleton, its acceptance criteria, its phase). The
+catalog is not just documentation: the agent reads it through tools. `list_consultation_jobs` renders
+the topic menu, `get_job(jobId)` returns the method and the required inputs, and `get_brief(jobId)`
+refuses to hand over atoms when those inputs are missing — so a story's requirements are enforced at
+runtime. Four category starters remain the entry point; a hub page would read the same records
+later. Adding a story is content work plus one record, and catalog tool calls double as usage
+analytics.
 
 **Caching and the hash key.**
 Computing a chart is fast, but doing it on every message is wasteful. The design stores results keyed
@@ -171,7 +204,7 @@ mixed with new ones.
   known reference charts before building anything.
 - **Golden fixtures** — saved pairs of input and known-correct output used as regression tests
   forever after.
-- **e2e** — a test that drives the real UI (onboarding, asking a question).
+- **e2e** — a test that drives the real conversation flow (first contact, data collection, a question).
 - **Lighthouse** — a performance measurement; the repo runs it in CI and charges extra for each
   database query on the visible page, which is why the design says the profile read must not add a
   serial query to the first paint (LCP = Largest Contentful Paint, when the main content becomes
@@ -181,80 +214,91 @@ mixed with new ones.
 
 Anna opens the app for the first time.
 
-1. The client finds no `AstroProfile` for her and shows the **wizard**: date of birth, time (or "I
-   don't know"), and a place field with autocomplete.
-2. She submits "12.05.1990, 14:30, Москва". The server resolves "Москва" to coordinates and an
-   **IANA timezone** (the standard timezone database, e.g. `Europe/Moscow`) and converts local time
-   to a precise UTC instant, applying the historical DST rules that were in force in 1990 — Russia
-   changed its rules several times, including 2011 and 2014, and a naive fixed offset would produce
-   a wrong chart. The profile is saved encrypted.
-3. On the landing page she sees a chart card and a **job catalog** of topic cards. She taps "Понять
-   себя" (JS-01).
-4. That opens a new chat with a **deep link** that carries the astrology model spec and a starter
-   question.
-5. When she sends the message, the server:
-   - authenticates her (existing `requireJwtAuth`),
-   - sees the conversation uses the astrology spec, so it loads her default profile (in parallel
-     with the other database reads it already performs, and cached),
-   - computes `ChartFacts` with the calculator (or reads it from cache),
-   - renders the digest of her natal placements and a second digest of today's **transits**,
-   - appends both to `sharedRunContext`.
-6. The model now receives: the astrologer agent instructions, the methodology Skill, the exact chart
-   facts, today's transits, and her question. It writes the interpretation. It cannot invent a
-   placement, because the real numbers are in front of it — and if it claims something, the claim
-   traces back to an atom in the brief.
-7. The client renders the answer, and renders the **chart wheel** as a React SVG component directly
-   from the chart JSON — not from anything the model wrote.
+1. She selects the astrologer agent and taps the **"Понять себя"** starter. There are four category
+   starters; a future hub would show more cards but MVP has none.
+2. Because no `AstroProfile` exists for her, the agent asks for birth data with one
+   **`ask_user_question`** call: date, time (with "I don't know" as an option), and place.
+3. She answers "12.05.1990, 14:30, Москва". The agent calls **`resolve_birth_place`**: the server
+   resolves "Москва" to coordinates and an **IANA timezone** (the standard timezone database, e.g.
+   `Europe/Moscow`) and converts local time to a precise UTC instant, applying the historical DST
+   rules that were in force in 1990 — Russia changed its rules several times, including 2011 and
+   2014, and a naive fixed offset would produce a wrong chart.
+4. The agent echoes the result — "Москва, Россия · 12.05.1990 · 14:30 · Europe/Moscow (UTC+3)" — and
+   calls **`save_birth_data`** only after her explicit "yes". The profile is stored encrypted.
+5. On her next message, the server injects context:
+   - the run registers the plugin's `UserPromptSubmit` hook; the hook script calls the REST API
+     (`POST /api/astrology/context`) with the conversation id,
+   - the API finds her in the generation job record, loads her default profile, computes
+     `ChartFacts` with the calculator (or reads it from cache), and returns the natal digest,
+     today's **transits**, and the 3–5 atom **accent**,
+   - the script prints it, and the model receives it as system context (`additionalContext`).
+6. The agent picks the job (JS-01): it calls **`get_job('JS-01')`** for the method and requirements,
+   then **`get_brief('JS-01')`** and receives the ranked atoms for that topic. It now has the
+   astrologer instructions, the methodology Skill, the exact chart facts, the accent, and the brief.
+   It writes the interpretation. It cannot invent a placement, because the real numbers are in front
+   of it — and if it claims something, the claim traces back to an atom in the brief.
+7. The answer appears in the chat; the **chart wheel** comes back as an MCP `ui://` resource rendered
+   from the same computed facts — not from anything the model wrote.
 8. Next month she returns with a new question. The same conversation persists, memory carries her
-   themes, and the server recomputes only the _today_ digest; the natal half comes from cache. That
-   is JS-26 continuity with no new storage.
+   themes, and the server recomputes only the _today_ digest and the brief for the new topic; the
+   natal half comes from cache. That is JS-26 continuity with no new storage.
 
 ## 5. Glossary (compact)
 
-| Term                   | Meaning                                                              |
-| ---------------------- | -------------------------------------------------------------------- |
-| Natal chart            | Sky snapshot at birth; positions of planets in signs/houses          |
-| Ecliptic               | 360° circle on which celestial positions are measured                |
-| Ephemeris              | Almanac/math that computes celestial positions for any date          |
-| `caelus`               | MIT TypeScript ephemeris + chart library we plan to use              |
-| Swiss Ephemeris        | Industry-standard C library; AGPL or paid commercial license         |
-| Tropical / sidereal    | Two zodiac conventions; we chose tropical (Western)                  |
-| House                  | One of 12 life-area sectors; needs birth time                        |
-| ASC / MC               | Ascendant / Midheaven; time-sensitive chart points                   |
-| Placidus / whole sign  | House systems; Placidus default, whole sign for unknown time         |
-| Aspect / orb           | Meaningful angle between planets / its tolerance                     |
-| Transit                | Current sky relative to the natal chart; basis of forecasts          |
-| Synastry               | Comparing two charts for compatibility                               |
-| Solar return           | Annual chart for the Sun's return to its birth position              |
-| `ChartFacts`           | The computed JSON result; source of truth                            |
-| Digest                 | Compact text rendering of facts injected into the model prompt       |
-| Atom / brief           | Curated interpretation snippet / selected set for a job              |
-| Skill                  | LibreChat markdown instructions loaded by the model                  |
-| Agent / model spec     | Configured assistant / selectable preset entry pointing at it        |
-| `sharedRunContext`     | Existing LibreChat channel for per-run extra system context          |
-| Adapter / seam         | Concrete implementation behind a small interface / where it plugs in |
-| Pure package           | Code with no app/DB/HTTP dependencies; easy to test and swap         |
-| `AstroProfile`         | Stored birth data record per person                                  |
-| Tenant                 | Organization isolation stamp on every record                         |
-| PII / TLS              | Personal data / encrypted transport; TLS is a prerequisite           |
-| Hash / cache key       | Fingerprint used to store and reuse computed results                 |
-| Spike                  | Time-boxed experiment to answer a risky question (engine accuracy)   |
-| Golden fixture         | Saved known-correct input/output pair used in tests                  |
-| e2e / LCP / Lighthouse | UI-level test / first content paint / performance CI check           |
+| Term                     | Meaning                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| Natal chart              | Sky snapshot at birth; positions of planets in signs/houses                         |
+| Ecliptic                 | 360° circle on which celestial positions are measured                               |
+| Ephemeris                | Almanac/math that computes celestial positions for any date                         |
+| `caelus`                 | MIT TypeScript ephemeris + chart library we plan to use                             |
+| Swiss Ephemeris          | Industry-standard C library; AGPL or paid commercial license                        |
+| Tropical / sidereal      | Two zodiac conventions; we chose tropical (Western)                                 |
+| House                    | One of 12 life-area sectors; needs birth time                                       |
+| ASC / MC                 | Ascendant / Midheaven; time-sensitive chart points                                  |
+| Placidus / whole sign    | House systems; Placidus default, whole sign for unknown time                        |
+| Aspect / orb             | Meaningful angle between planets / its tolerance                                    |
+| Transit                  | Current sky relative to the natal chart; basis of forecasts                         |
+| Synastry                 | Comparing two charts for compatibility                                              |
+| Solar return             | Annual chart for the Sun's return to its birth position                             |
+| `ChartFacts`             | The computed JSON result; source of truth                                           |
+| Digest                   | Compact text rendering of facts injected into the model prompt                      |
+| Atom / brief             | Curated interpretation snippet / selected set for a job                             |
+| `ask_user_question`      | LibreChat tool that pauses the run to ask the user structured questions             |
+| `resolve_birth_place`    | Tool that turns a place name into candidates, coordinates, and an IANA timezone     |
+| `list_consultation_jobs` | Tool that lists catalog topics, so the menu comes from data                         |
+| `get_job`                | Tool that returns a job's method, required inputs, and answer skeleton              |
+| `get_brief`              | Tool that returns the ranked atoms for a job, after checking its requirements       |
+| `ui://`                  | MCP resource rendered in the chat as an interactive widget (for example the wheel)  |
+| Skill                    | LibreChat markdown instructions loaded by the model                                 |
+| Agent / model spec       | Configured assistant / selectable preset entry pointing at it                       |
+| Deployment plugin        | Operator-installed bundle LibreChat loads at startup (manifest, MCP, skills, hooks) |
+| Hook / additionalContext | Script run at a named moment in a run / text it adds to the model's system context  |
+| MCP tool                 | Standard LibreChat way to give a model callable tools                               |
+| REST API / service token | One HTTP surface: hook and MCP use a service token; browser JWT mode deferred       |
+| Fail-open                | A delivery failure yields no digest instead of a failed turn                        |
+| Adapter / seam           | Concrete implementation behind a small interface / where it plugs in                |
+| Pure package             | Code with no app/DB/HTTP dependencies; easy to test and swap                        |
+| `AstroProfile`           | Stored birth data record per person                                                 |
+| Tenant                   | Organization isolation stamp on every record                                        |
+| PII / TLS                | Personal data / encrypted transport; TLS is a prerequisite                          |
+| Hash / cache key         | Fingerprint used to store and reuse computed results                                |
+| Spike                    | Time-boxed experiment to answer a risky question (engine accuracy)                  |
+| Golden fixture           | Saved known-correct input/output pair used in tests                                 |
+| e2e / LCP / Lighthouse   | UI-level test / first content paint / performance CI check                          |
 
 ## 6. What each section of the design was trying to say
 
-| Design section    | Plain meaning                                                                       |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| §1 Scope          | Which four stories we build first; the rest is a data-driven catalog                |
-| §2 Domain model   | The exact shape of inputs, computed facts, and the interpretation atoms             |
-| §3 Architecture   | Which package does what; how the digest reaches the prompt; database, config, agent |
-| §4 UX             | Wizard, hub, chart card, answer shape, degraded states                              |
-| §5 Non-functional | Caching, no slow queries on first paint, cost control, tenancy, memory limits       |
-| §6 Verification   | Prove the engine is accurate before building; then unit/route/e2e tests             |
-| §7 Risks          | Young library, Russian content volume, TLS/PII, model quality                       |
-| §8 Open questions | Residency, geocoding provider, hub placement, content ownership                     |
-| §9 Next steps     | Approve, run the spike, then formalize as an OpenSpec change                        |
+| Design section    | Plain meaning                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| §1 Scope          | Which four stories we build first; the rest is a data-driven catalog                            |
+| §2 Domain model   | The exact shape of inputs, computed facts, and the interpretation atoms                         |
+| §3 Architecture   | Which package does what; how the hook and MCP deliver facts and briefs; database, config, agent |
+| §4 UX             | Chat-first: starters, birth-data collection, answer shape, degraded states                      |
+| §5 Non-functional | Caching, no slow queries on first paint, cost control, tenancy, memory limits                   |
+| §6 Verification   | Prove the engine is accurate before building; then unit/route/e2e tests                         |
+| §7 Risks          | Young library, experimental upstream hook, Russian content volume, TLS/PII, model quality       |
+| §8 Open questions | Residency, geocoding provider, hub timing, content ownership                                    |
+| §9 Next steps     | Approve, run the spike, then formalize as an OpenSpec change                                    |
 
 ## 7. How this document relates to the design
 
