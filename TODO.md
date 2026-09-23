@@ -8,3 +8,4 @@
 - [ ] review `archive.guidance` in `openspec/config.yaml`
 - [ ] prio - what we can, ads, external
 - [ ] review development deployment flow implemented
+- [ ] implement code review
