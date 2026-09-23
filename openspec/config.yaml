@@ -1,31 +1,36 @@
 schema: spec-driven
 
 # Per-artifact rules, applied to the artifacts they name.
+context: |
+  This project ([rockstardevelopment/vera-chat](https://github.com/rockstardevelopment/vera-chat))
+  is a fork of [danny-avila/LibreChat](https://github.com/danny-avila/LibreChat). Fork-specific
+  documentation leaves under `vera-docs/`.
+
 rules:
   proposal:
-    - If the change alters fork-specific process, deployment, or operator workflow, list the exact
-      `vera-docs/` pages to add or update, including the nearest `index.md` updates, in Impact.
+    - If the change alters logic described in `vera-docs/`, list pages to add or update, including
+      `index.md` updates.
   tasks:
-    - A documentation task names the exact `vera-docs/` page and the `index.md` files on its path;
-      documentation is updated as the work lands, not deferred to archive.
+    - A documentation task names the exact `vera-docs/` page and the `index.md` files on its path,
+      that need to be referenced / modified while implementing tasks.
     - Each task states how it is verified; do not mark a task complete without running that check.
 
 # Advisory guidance for the apply and archive operations.
 operations:
   apply:
     guidance:
-      - 'Mark a task complete only after its stated verification has actually run and passed. If a
+      - Mark a task complete only after its stated verification has actually run and passed. If a
         task cannot be completed in the session, leave it unchecked and record the blocker in its
-        line instead of checking the box.'
-      - 'Keep `vera-docs/` pages and the nearest `index.md` current as work lands; do not leave
-        documentation to the archive step.'
+        line instead of checking the box.
+      - Keep `vera-docs/` pages and the nearest `index.md` current as work lands; do not leave
+        documentation to the archive operation.
   archive:
     guidance:
-      - "Reconcile every unchecked task before archiving. Done but unchecked — verify the task's
-        stated evidence and check it. Obsolete — annotate the line in place with
-        `— dropped: <reason>`. Still needed — carry it into the successor change."
+      - "Reconcile every unchecked task before archiving. Done but unchecked - verify the task's
+        stated evidence and check it. Obsolete - annotate the line in place with
+        `- dropped: <reason>`. Still needed - carry it into the successor change."
       - 'When any work is carried, create the successor change before archiving and annotate each
-        carried task line with `— carried to <successor-name>`; the archived tasks.md must name
+        carried task line with `- carried to <successor-name>`; the archived tasks.md must name
         where the work went.'
       - "Reconcile delta specs with what actually shipped before syncing: behavior that did not
         ship moves to the successor change's delta instead of the main specs. Pending operational
