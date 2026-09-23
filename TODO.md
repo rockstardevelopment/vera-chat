@@ -1,13 +1,10 @@
 - [ ] add branches protection
 - [ ] merge to main easily
-- [ ] create proposal for production deployment
 - [ ] teraform deployment
-- [ ] question regards .env storage
-- [ ] archive spec
-- [ ] librachat.yaml transfer to server
+- [ ] question regards .env and librechat.yaml storage (migration in process of deployment)
 - [ ] make repo private
 - [ ] check if firewall is needed
 - [ ] TLS setup
-- [ ] what todo with undone steps in openspec?
+- [ ] review `archive.guidance` in `openspec/config.yaml`
 - [ ] prio - what we can, ads, external
 - [ ] review development deployment flow implemented
