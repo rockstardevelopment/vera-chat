@@ -87,7 +87,7 @@ The agent SHALL select techniques from the method it chose. This deployment supp
 
 ### Requirement: Input collection and confirmation
 
-The agent SHALL determine the inputs the selected technique requires, reuse what is already stored in the user's profile or present in the conversation, and ask for what is missing through structured questions. The agent MUST persist birth data only after the user has explicitly confirmed the resolved place, timezone, and local time in a summary echo. Data about another person MUST be stored only after separate confirmation.
+The agent SHALL determine the inputs the selected technique requires, reuse what is already stored in the user's profile or present in the conversation, and ask for what is missing through structured questions. When the user has several profiles and the request does not name one, the agent SHALL resolve which profile to use with the user. The agent MUST persist birth data only after the user has explicitly confirmed the resolved place, timezone, and local time in a summary echo.
 
 #### Scenario: Profile exists
 
@@ -189,16 +189,11 @@ For a non-astrological message the agent SHALL answer according to its category:
 - **WHEN** the user sends an unacceptable or off-topic message
 - **THEN** the agent gives a brief non-engaging reply without astrological reinterpretation
 
-### Requirement: Persona exposure, language, and gating
+### Requirement: Persona exposure and language
 
-The astrologer SHALL be selectable as a fixed persona that users cannot edit, and SHALL answer in the language of the user's message. The persona MUST be absent when the astrology feature is disabled in the deployment configuration.
+The astrologer SHALL be selectable as a fixed persona that users cannot edit, and SHALL answer in the language of the user's message.
 
 #### Scenario: Language
 
 - **WHEN** the user writes in Russian
 - **THEN** the agent answers in Russian
-
-#### Scenario: Feature disabled
-
-- **WHEN** the astrology feature is disabled in the deployment configuration
-- **THEN** the astrologer persona is not selectable

@@ -6,7 +6,7 @@ Provides the deterministic astrology computation and birth-profile storage that 
 
 ### Requirement: MCP tool surface
 
-The service SHALL expose its capabilities to the agent exclusively through MCP tools, split into profile tools and computation tools: place resolution, profile save, list, update, and delete; and natal chart, transits, horary chart, and elective-window computation. Tool results SHALL carry computed facts with the engine and option versions that produced them, and MUST NOT contain interpretation.
+The service SHALL expose its capabilities to the agent exclusively through MCP tools, split into profile tools and computation tools: place resolution, profile save, list, update, and delete; and natal chart, transits, horary chart, and elective-window computation. Computation tools SHALL take the target profile identifier explicitly. Tool results SHALL carry computed facts with the engine and option versions that produced them, and MUST NOT contain interpretation.
 
 #### Scenario: Profile round trip
 
@@ -20,7 +20,7 @@ The service SHALL expose its capabilities to the agent exclusively through MCP t
 
 ### Requirement: Deterministic computation and accuracy gate
 
-The service SHALL compute chart facts deterministically from birth or event data and the configured options. Before this capability ships, computation MUST be validated against reference ephemeris output on a fixture set that includes Russian DST transitions, polar latitudes, ambiguous and nonexistent local times, southern-hemisphere data, and pre-1900 dates, within documented tolerances for body longitudes, house cusps, and retrograde flags. Engine and option version changes MUST be reflected in results so that reused or stored results can be invalidated.
+The service SHALL compute chart facts deterministically from birth or event data and the configured options. Before this capability ships, computation MUST be validated against reference ephemeris output on a fixture set that includes Russian DST transitions, polar latitudes, ambiguous and nonexistent local times, southern-hemisphere data, within documented tolerances for body longitudes, house cusps, and retrograde flags. Engine and option version changes MUST be reflected in results so that reused or stored results can be invalidated.
 
 #### Scenario: Reference agreement
 
@@ -95,12 +95,7 @@ The service SHALL identify the calling user only from the identity supplied by t
 
 ### Requirement: Operator configuration
 
-Feature enablement, house system, orb profile, geocoding provider, and the per-user profile limit SHALL be operator-configurable, with defaults that keep the feature disabled. Enforced limits SHALL reject excess profiles with a clear error.
-
-#### Scenario: Default disabled
-
-- **WHEN** no astrology configuration is provided
-- **THEN** the feature is disabled and the service accepts no profile operations
+House system, orb profile, geocoding provider, and the per-user profile limit SHALL be operator-configurable through the service's deployment configuration. Enforced limits SHALL reject excess profiles with a clear error.
 
 #### Scenario: Profile limit
 
