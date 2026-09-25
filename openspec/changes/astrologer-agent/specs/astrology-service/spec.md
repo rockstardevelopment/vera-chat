@@ -18,34 +18,6 @@ The service SHALL expose its capabilities to the agent exclusively through MCP t
 - **WHEN** a computation tool returns
 - **THEN** the result contains chart facts and version metadata, with no interpretive text
 
-### Requirement: Deterministic computation and accuracy gate
-
-The service SHALL compute chart facts deterministically from birth or event data and the configured options. Before this capability ships, computation MUST be validated against reference ephemeris output on a fixture set that includes Russian DST transitions, polar latitudes, ambiguous and nonexistent local times, southern-hemisphere data, within documented tolerances for body longitudes, house cusps, and retrograde flags. Engine and option version changes MUST be reflected in results so that reused or stored results can be invalidated.
-
-#### Scenario: Reference agreement
-
-- **WHEN** a fixture chart is computed
-- **THEN** body longitudes, Ascendant, Midheaven, house cusps, and retrograde flags agree with the reference within the documented tolerances
-
-#### Scenario: Timezone and DST
-
-- **WHEN** a birth time falls in a historical Russian DST transition
-- **THEN** the computed instant matches the reference timezone rules exactly
-
-#### Scenario: Determinism
-
-- **WHEN** the same input and options are computed twice
-- **THEN** the facts are identical
-
-### Requirement: Unknown birth time degradation
-
-When birth time is unknown the service SHALL compute with the documented default time and SHALL mark the affected results so that Ascendant and house-sensitive facts are not presented as reliable.
-
-#### Scenario: Time-unknown profile
-
-- **WHEN** a natal computation runs for a profile with unknown birth time
-- **THEN** the result identifies the time confidence and marks house-dependent facts as unreliable
-
 ### Requirement: Place and timezone resolution
 
 The service SHALL resolve a place name to coordinates and an IANA timezone with historical rules. When the input is ambiguous it SHALL return candidate places for confirmation instead of choosing one. When the resolved local time is ambiguous or nonexistent it SHALL report that condition rather than silently selecting an offset.

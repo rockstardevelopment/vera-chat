@@ -50,6 +50,7 @@ export default [
       'packages/api/types/**/*',
       'packages/api/dist/**/*',
       'packages/api/test_bundle/**/*',
+      'packages/astrology/dist/**/*',
       'api/demo/**/*',
       'packages/client/dist/**/*',
       'packages/data-provider/types/**/*',

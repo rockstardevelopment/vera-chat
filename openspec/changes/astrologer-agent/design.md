@@ -9,7 +9,7 @@ The fork is a LibreChat 0.8.x monorepo: `/api` holds Express wiring, `/packages/
 - **HITL**: `ask_user_question` is a default agent capability with durable Mongo checkpointing.
 - **Deployment**: the image is built today from `Dockerfile.multi` target `api-build` (D10 repoints this at the fork-owned `Dockerfile.vera`); `deploy-compose.vera.yml` overlays upstream compose; droplets are 512 MB, Mongo Atlas holds the database, and both environments run plain HTTP (`vera-docs/deployment.md`). The operator-owned, gitignored `librechat.yaml` defines an OpenRouter custom endpoint defaulting to `deepseek/deepseek-v4.1-flash`.
 
-The requirements document is the behavior contract for the agent: [Agents → Astrologer](https://docs.google.com/document/d/1FPWwErD2LrCurpZ1-wtL6PYRqXorZBSMKcVQzzGjNfY/edit?tab=t.ez58ri8rm3vb) (snapshot: [`reference/requirements.md`](./reference/requirements.md)). `librechat.yaml` is gitignored and operator-owned on the droplet, so this change documents the block to add instead of committing it. The `vera-docs/drafts/` drafts that describe a larger architecture are removed by this change.
+The requirements document is the behavior contract for the agent: [Agents → Astrologer](https://docs.google.com/document/d/1FPWwErD2LrCurpZ1-wtL6PYRqXorZBSMKcVQzzGjNfY/edit?tab=t.ez58ri8rm3vb) (snapshot: [`reference/requirements.md`](./reference/requirements.md)). `librechat.yaml` is gitignored and operator-owned on the droplet, so this change documents the block to add instead of committing it.
 
 ## Goals / Non-Goals
 
@@ -93,5 +93,5 @@ The requirements document requires only that the agent reuse a stored or convers
 ## Open Questions
 
 - Geocoding provider default for development (Photon, GeoNames, or a hosted alternative) — decided during implementation; the setting exists either way.
-- Timezone/DST resolver (`caelus-birth`, `luxon`/`moment-timezone`, or Node's ICU data) — decided during the spike; the service exposes no provider choice.
+- ~~Timezone/DST resolver (`caelus-birth`, `luxon`/`moment-timezone`, or Node's ICU data)~~ Resolved by `astrology-engine-gate`: `caelus-birth` (local time and place to UT, including ambiguous and nonexistent times); the service exposes no provider choice.
 - Final prompt wording and the exact pinned model — content and evaluation work, neither changes the approach.

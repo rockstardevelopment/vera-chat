@@ -1,11 +1,11 @@
 ## 1. Ephemeris spike and engine
 
-- [ ] 1.1 Scaffold `packages/astrology` with the sibling package tooling (package.json, tsconfig, tsdown config, test runner) and verify `npm run build` succeeds in that workspace.
-- [ ] 1.2 Implement `computeChart` over `caelus` behind the seam contract (plain input, `ChartFacts` output with engine/option versions) and verify a smoke test returns placements for a known chart.
-- [ ] 1.3 Build the reference fixture harness (Swiss Ephemeris output for the fixture set: Russian DST 1985/1991/2011/2014, polar latitude, ambiguous and nonexistent local times, southern hemisphere) and verify every fixture passes the documented longitude, cusp, and retrograde tolerances; record the measured computation RSS for the droplet memory check.
-- [ ] 1.4 Decide `caelus` versus a commercial Swiss Ephemeris license based on the gate result, pin the library version, and record the decision and measurements in the change's `design.md`; verify the record names the tolerances met and the memory measurement.
+- [ ] 1.1 Scaffold `packages/astrology` with the sibling package tooling (package.json, tsconfig, tsdown config, test runner) and verify `npm run build` succeeds in that workspace. - carried to astrology-engine-gate
+- [ ] 1.2 Implement `computeChart` over `caelus` behind the seam contract (plain input, `ChartFacts` output with engine/option versions) and verify a smoke test returns placements for a known chart. - carried to astrology-engine-gate
+- [ ] 1.3 Build the reference fixture harness (Swiss Ephemeris output for the fixture set: Russian DST 1985/1991/2011/2014, polar latitude, ambiguous and nonexistent local times, southern hemisphere) and verify every fixture passes the documented longitude, cusp, and retrograde tolerances; record the measured computation RSS for the droplet memory check. - carried to astrology-engine-gate
+- [ ] 1.4 Decide `caelus` versus a commercial Swiss Ephemeris license based on the gate result, pin the library version, and record the decision and measurements in the change's `design.md`; verify the record names the tolerances met and the memory measurement. - carried to astrology-engine-gate
 - [ ] 1.5 Implement `computeTransits`, `computeHorary`, and `findElectiveWindows` and verify unit tests cover determinism, DST-edge fixtures, and horary/elective option handling per technique.
-- [ ] 1.6 Implement unknown-birth-time degradation (documented default time, confidence and unreliable-house marking) and verify a test asserts house-dependent facts are marked for a time-unknown input.
+- [ ] 1.6 Implement unknown-birth-time degradation (documented default time, confidence and unreliable-house marking) and verify a test asserts house-dependent facts are marked for a time-unknown input. - carried to astrology-engine-gate
 
 ## 2. Service configuration
 
@@ -42,7 +42,7 @@
 ## 7. Verification
 
 - [ ] 7.1 Run `npx tsc --noEmit` in every changed workspace (`packages/astrology`, `packages/astrology-mcp`, `packages/data-schemas`) and verify no errors.
-- [ ] 7.2 Run `npm run sort-imports` on the touched paths and verify no further diff remains.
+- [ ] 7.2 Run `npm run sort-imports` and `npm run lint` (ESLint with Prettier) on the touched paths and verify no further diff and no lint errors remain.
 - [ ] 7.3 Run `npm run lighthouse` and verify the visible-conversation LCP budget still passes after the startup config changes.
 - [ ] 7.4 Exercise the four method flows on dev (natal, transits, horary, elective) plus one unknown-birth-time run, one unsupported-technique request, and one sidecar-down run, and verify each behavior matches the spec scenarios, including "calculations unavailable" instead of invented facts.
 
@@ -51,4 +51,4 @@
 - [ ] 8.1 Add `vera-docs/astrology.md` (fork-specific architecture, service deployment settings, operations, and the deferred-capability list) and update the page table in `vera-docs/index.md`; verify the new link resolves and the table entry describes the page.
 - [ ] 8.2 Update `vera-docs/deployment.md` with the sidecar service, the `Dockerfile.vera` choice and its upstream-sync drift note, the operator environment keys, the `librechat.yaml` block the operator adds, the updated `docker ps` expectation (API plus sidecar on development), and the development-only/TLS caveat; add the new upstream-file conflict hot spots to `vera-docs/fork-workflow.md`; verify the documented commands match what task 6 executed.
 - [ ] 8.3 Record the resolutions of the `design.md` open questions (geocoding default, timezone resolver, pinned model) in the change artifacts and verify no open question lacks a resolution or an explicit carry-forward note.
-- [ ] 8.4 Remove `vera-docs/drafts/` (including its `index.md`) and verify no live references remain in `vera-docs/` or `openspec/changes/` (`grep -rn drafts`).
+- [x] 8.4 Remove `vera-docs/drafts/` (including its `index.md`) and verify no live references remain in `vera-docs/` or `openspec/changes/` (`grep -rn drafts`). - done

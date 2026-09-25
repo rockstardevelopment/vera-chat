@@ -1,0 +1,1010 @@
+{
+  "provenance": {
+    "reference": "Swiss Ephemeris 2.10.03",
+    "library": "pyswisseph 2.10.3.2",
+    "ephemerisFiles": ["sepl_18.se1", "semo_18.se1", "seas_18.se1"],
+    "generatedAt": "2026-09-24",
+    "procedure": "fixtures/generate_fixtures.py"
+  },
+  "tolerances": {
+    "bodyLongitudeArcsec": 5,
+    "moonLongitudeArcsec": 10,
+    "cuspArcsec": 10,
+    "retrograde": "exact"
+  },
+  "fixtures": [
+    {
+      "id": "ru-dst-1985-summer-moscow",
+      "description": "Moscow summer time 1985 (UTC+4): a DST transition year.",
+      "input": {
+        "instantUtc": "1985-07-01T08:00:00.000Z",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "1985-07-01",
+        "time": "12:00",
+        "zone": "Europe/Moscow",
+        "expectedOffsetMinutes": 240.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 99.428047,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 263.799663,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 122.325485,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 54.690356,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 104.480254,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 315.876618,
+            "retrograde": true
+          },
+          "saturn": {
+            "longitude": 231.943395,
+            "retrograde": true
+          },
+          "uranus": {
+            "longitude": 255.020928,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 272.037566,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 211.958283,
+            "retrograde": true
+          },
+          "mean_node": {
+            "longitude": 45.546245,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 47.061199,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 71.267345,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 171.305969,
+            "midheaven": 77.982184,
+            "cusps": [
+              171.305969, 192.93964, 221.48349, 257.982184, 296.296593, 327.306745, 351.305969,
+              12.93964, 41.48349, 77.982184, 116.296593, 147.306745
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 171.305969,
+            "midheaven": 77.982184,
+            "cusps": [150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "ru-dst-1991-summer-moscow",
+      "description": "Moscow 1991 (UTC+3): the year Russia abolished DST; the pre/permanent offset.",
+      "input": {
+        "instantUtc": "1991-06-15T09:00:00.000Z",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "1991-06-15",
+        "time": "12:00",
+        "zone": "Europe/Moscow",
+        "expectedOffsetMinutes": 180.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 83.781792,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 124.19841,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 81.522458,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 129.127096,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 131.737526,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 131.424175,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 306.171926,
+            "retrograde": true
+          },
+          "uranus": {
+            "longitude": 282.575678,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 285.972912,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 228.058494,
+            "retrograde": true
+          },
+          "mean_node": {
+            "longitude": 290.377272,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 289.07604,
+            "retrograde": false
+          },
+          "chiron": {
+            "longitude": 115.967311,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 170.528693,
+            "midheaven": 76.900116,
+            "cusps": [
+              170.528693, 192.048949, 220.478292, 256.900116, 295.304252, 326.430274, 350.528693,
+              12.048949, 40.478292, 76.900116, 115.304252, 146.430274
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 170.528693,
+            "midheaven": 76.900116,
+            "cusps": [150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "ru-dst-2011-nonexistent-moscow",
+      "description": "Moscow 2011 spring-forward gap (02:00 +3 -> +4): 02:30 does not exist; tzdb convention shifts it forward, i.e. the pre-transition offset instant.",
+      "input": {
+        "instantUtc": "2011-03-26T23:30:00.000Z",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2011-03-27",
+        "time": "02:30",
+        "zone": "Europe/Moscow",
+        "expectedOffsetMinutes": null,
+        "expectedStatus": "nonexistent"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 5.956758,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 281.5474,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 23.412361,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 329.630972,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 355.139158,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 13.885935,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 194.500892,
+            "retrograde": true
+          },
+          "uranus": {
+            "longitude": 0.852193,
+            "retrograde": false
+          },
+          "neptune": {
+            "longitude": 329.735899,
+            "retrograde": false
+          },
+          "pluto": {
+            "longitude": 277.460724,
+            "retrograde": false
+          },
+          "mean_node": {
+            "longitude": 267.807627,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 267.382446,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 333.046376,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 265.241538,
+            "midheaven": 216.507418,
+            "cusps": [
+              265.241538, 314.56259, 5.779424, 36.507418, 56.17936, 71.276223, 85.241538, 134.56259,
+              185.779424, 216.507418, 236.17936, 251.276223
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 265.241538,
+            "midheaven": 216.507418,
+            "cusps": [240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "ru-dst-2011-summer-moscow",
+      "description": "Moscow 2011 permanent summer time (UTC+4).",
+      "input": {
+        "instantUtc": "2011-07-15T08:00:00.000Z",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2011-07-15",
+        "time": "12:00",
+        "zone": "Europe/Moscow",
+        "expectedOffsetMinutes": 240.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 112.519424,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 293.199247,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 138.782934,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 103.666557,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 77.02964,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 37.071156,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 191.294294,
+            "retrograde": false
+          },
+          "uranus": {
+            "longitude": 4.553231,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 330.480983,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 275.774603,
+            "retrograde": true
+          },
+          "mean_node": {
+            "longitude": 261.964211,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 263.2843,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 334.864512,
+            "retrograde": true
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 180.300069,
+            "midheaven": 90.413462,
+            "cusps": [
+              180.300069, 203.199398, 233.017498, 270.413462, 307.74753, 337.482178, 0.300069,
+              23.199398, 53.017498, 90.413462, 127.74753, 157.482178
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 180.300069,
+            "midheaven": 90.413462,
+            "cusps": [180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0, 150.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "ru-dst-2014-ambiguous-moscow",
+      "description": "Moscow 2014 fall-back hour (02:00 +4 -> +3): 01:30 occurs twice; the earlier instant is chosen.",
+      "input": {
+        "instantUtc": "2014-10-25T21:30:00.000Z",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2014-10-26",
+        "time": "01:30",
+        "zone": "Europe/Moscow",
+        "expectedOffsetMinutes": 240.0,
+        "expectedStatus": "ambiguous"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 212.38964,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 236.055816,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 196.760802,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 212.538853,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 269.593769,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 139.688321,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 233.170263,
+            "retrograde": false
+          },
+          "uranus": {
+            "longitude": 13.800153,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 334.925124,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 281.271119,
+            "retrograde": false
+          },
+          "mean_node": {
+            "longitude": 198.491884,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 199.261147,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 343.490984,
+            "retrograde": true
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 143.130133,
+            "midheaven": 36.637333,
+            "cusps": [
+              143.130133, 160.402637, 183.871622, 216.637333, 258.128623, 295.325748, 323.130133,
+              340.402637, 3.871622, 36.637333, 78.128623, 115.325748
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 143.130133,
+            "midheaven": 36.637333,
+            "cusps": [120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "ru-dst-2014-winter-moscow",
+      "description": "Moscow 2014 permanent standard time (UTC+3) after the October change.",
+      "input": {
+        "instantUtc": "2014-12-15T09:00:00.000Z",
+        "latitude": 55.7558,
+        "longitude": 37.6173,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2014-12-15",
+        "time": "12:00",
+        "zone": "Europe/Moscow",
+        "expectedOffsetMinutes": 180.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 263.295276,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 182.456603,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 267.176163,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 275.871421,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 308.059342,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 142.557287,
+            "retrograde": true
+          },
+          "saturn": {
+            "longitude": 239.08572,
+            "retrograde": false
+          },
+          "uranus": {
+            "longitude": 12.588574,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 335.041037,
+            "retrograde": false
+          },
+          "pluto": {
+            "longitude": 282.594706,
+            "retrograde": false
+          },
+          "mean_node": {
+            "longitude": 195.818922,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 196.828003,
+            "retrograde": false
+          },
+          "chiron": {
+            "longitude": 343.314992,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 322.978368,
+            "midheaven": 257.634661,
+            "cusps": [
+              322.978368, 30.364306, 59.569486, 77.634661, 93.125734, 110.853865, 142.978368,
+              210.364306, 239.569486, 257.634661, 273.125734, 290.853865
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 322.978368,
+            "midheaven": 257.634661,
+            "cusps": [300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "polar-tromso",
+      "description": "Polar latitude (69.65 N): Placidus is undefined; the whole-sign fallback is compared.",
+      "input": {
+        "instantUtc": "1990-06-15T10:00:00.000Z",
+        "latitude": 69.6492,
+        "longitude": 18.9553,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "whole_sign"
+      },
+      "local": {
+        "date": "1990-06-15",
+        "time": "12:00",
+        "zone": "Europe/Oslo",
+        "expectedOffsetMinutes": 120.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 84.049963,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 344.245795,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 65.547866,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 48.679602,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 10.981394,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 105.871435,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 294.036818,
+            "retrograde": true
+          },
+          "uranus": {
+            "longitude": 278.168454,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 283.719162,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 225.403189,
+            "retrograde": true
+          },
+          "mean_node": {
+            "longitude": 309.702298,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 308.120741,
+            "retrograde": false
+          },
+          "chiron": {
+            "longitude": 106.05208,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "whole_sign": {
+            "ascendant": 171.165011,
+            "midheaven": 73.758836,
+            "cusps": [150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "southern-sydney",
+      "description": "Southern hemisphere (33.87 S), winter date.",
+      "input": {
+        "instantUtc": "1990-06-15T02:00:00.000Z",
+        "latitude": -33.8688,
+        "longitude": 151.2093,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "1990-06-15",
+        "time": "12:00",
+        "zone": "Australia/Sydney",
+        "expectedOffsetMinutes": 600.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 83.731588,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 339.821114,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 64.979709,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 48.287684,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 10.741652,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 105.799268,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 294.056278,
+            "retrograde": true
+          },
+          "uranus": {
+            "longitude": 278.181409,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 283.727487,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 225.409946,
+            "retrograde": true
+          },
+          "mean_node": {
+            "longitude": 309.719954,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 308.115136,
+            "retrograde": false
+          },
+          "chiron": {
+            "longitude": 106.01837,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 171.273839,
+            "midheaven": 84.777063,
+            "cusps": [
+              171.273839, 212.041611, 241.260063, 264.777063, 287.518226, 314.156835, 351.273839,
+              32.041611, 61.260063, 84.777063, 107.518226, 134.156835
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 171.273839,
+            "midheaven": 84.777063,
+            "cusps": [150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "retrograde-mercury-berlin",
+      "description": "Mercury retrograde (2024-04-01..25 window), modern date.",
+      "input": {
+        "instantUtc": "2024-04-15T10:00:00.000Z",
+        "latitude": 52.52,
+        "longitude": 13.405,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2024-04-15",
+        "time": "12:00",
+        "zone": "Europe/Berlin",
+        "expectedOffsetMinutes": 120.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 25.926487,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 111.515838,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 19.96974,
+            "retrograde": true
+          },
+          "venus": {
+            "longitude": 12.659123,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 348.218575,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 50.534993,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 345.154314,
+            "retrograde": false
+          },
+          "uranus": {
+            "longitude": 51.520537,
+            "retrograde": false
+          },
+          "neptune": {
+            "longitude": 358.424667,
+            "retrograde": false
+          },
+          "pluto": {
+            "longitude": 302.032727,
+            "retrograde": false
+          },
+          "mean_node": {
+            "longitude": 15.294783,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 15.561516,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 19.798314,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 122.754005,
+            "midheaven": 8.122306,
+            "cusps": [
+              122.754005, 138.84291, 159.425367, 188.122306, 227.831243, 270.378987, 302.754005,
+              318.84291, 339.425367, 8.122306, 47.831243, 90.378987
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 122.754005,
+            "midheaven": 8.122306,
+            "cusps": [120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "retrograde-mars-berlin",
+      "description": "Mars retrograde (2022-10-30..12-12 window).",
+      "input": {
+        "instantUtc": "2022-11-15T11:00:00.000Z",
+        "latitude": 52.52,
+        "longitude": 13.405,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2022-11-15",
+        "time": "12:00",
+        "zone": "Europe/Berlin",
+        "expectedOffsetMinutes": 60.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 233.050194,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 130.983476,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 237.011428,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 238.999329,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 83.779308,
+            "retrograde": true
+          },
+          "jupiter": {
+            "longitude": 358.924157,
+            "retrograde": true
+          },
+          "saturn": {
+            "longitude": 319.051266,
+            "retrograde": false
+          },
+          "uranus": {
+            "longitude": 46.657662,
+            "retrograde": true
+          },
+          "neptune": {
+            "longitude": 352.741859,
+            "retrograde": true
+          },
+          "pluto": {
+            "longitude": 296.457019,
+            "retrograde": false
+          },
+          "mean_node": {
+            "longitude": 42.667551,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 43.322382,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 12.56877,
+            "retrograde": true
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 289.475325,
+            "midheaven": 235.262433,
+            "cusps": [
+              289.475325, 347.677231, 30.157151, 55.262433, 73.466813, 89.96909, 109.475325,
+              167.677231, 210.157151, 235.262433, 253.466813, 269.96909
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 289.475325,
+            "midheaven": 235.262433,
+            "cusps": [270.0, 300.0, 330.0, 0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0]
+          }
+        }
+      }
+    },
+    {
+      "id": "baseline-new-york-2000",
+      "description": "J2000-adjacent baseline (2000-01-01), northern mid-latitude.",
+      "input": {
+        "instantUtc": "2000-01-01T17:00:00.000Z",
+        "latitude": 40.7128,
+        "longitude": -74.006,
+        "timeKnown": true
+      },
+      "options": {
+        "houseSystem": "placidus"
+      },
+      "local": {
+        "date": "2000-01-01",
+        "time": "12:00",
+        "zone": "America/New_York",
+        "expectedOffsetMinutes": -300.0,
+        "expectedStatus": "ok"
+      },
+      "expected": {
+        "bodies": {
+          "sun": {
+            "longitude": 280.581303,
+            "retrograde": false
+          },
+          "moon": {
+            "longitude": 225.825072,
+            "retrograde": false
+          },
+          "mercury": {
+            "longitude": 272.213612,
+            "retrograde": false
+          },
+          "venus": {
+            "longitude": 241.817697,
+            "retrograde": false
+          },
+          "mars": {
+            "longitude": 328.124902,
+            "retrograde": false
+          },
+          "jupiter": {
+            "longitude": 25.261652,
+            "retrograde": false
+          },
+          "saturn": {
+            "longitude": 40.391548,
+            "retrograde": true
+          },
+          "uranus": {
+            "longitude": 314.819686,
+            "retrograde": false
+          },
+          "neptune": {
+            "longitude": 303.200428,
+            "retrograde": false
+          },
+          "pluto": {
+            "longitude": 251.462098,
+            "retrograde": false
+          },
+          "mean_node": {
+            "longitude": 125.029615,
+            "retrograde": true
+          },
+          "true_node": {
+            "longitude": 123.942353,
+            "retrograde": true
+          },
+          "chiron": {
+            "longitude": 251.641427,
+            "retrograde": false
+          }
+        },
+        "houses": {
+          "placidus": {
+            "ascendant": 19.960596,
+            "midheaven": 280.717924,
+            "cusps": [
+              19.960596, 55.585404, 79.714593, 100.717924, 123.478294, 153.892143, 199.960596,
+              235.585404, 259.714593, 280.717924, 303.478294, 333.892143
+            ]
+          },
+          "whole_sign": {
+            "ascendant": 19.960596,
+            "midheaven": 280.717924,
+            "cusps": [0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0, 210.0, 240.0, 270.0, 300.0, 330.0]
+          }
+        }
+      }
+    }
+  ]
+}

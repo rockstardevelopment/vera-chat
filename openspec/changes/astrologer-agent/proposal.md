@@ -16,6 +16,28 @@ The behavior contract is the product requirements document (Google Docs, "Agents
 
 Deferred, explicit non-goals of this change: synastry, composite, secondary progressions, and solar/lunar returns; interpretation atoms/briefs and a persisted chart-facts cache; REST endpoints and prompt-injection hooks; TLS; internationalization; expanded edge-case policy beyond the fallbacks the requirements state. Each deferred item needs its own future change; the list is mirrored in `vera-docs/astrology.md`.
 
+## Program Decomposition
+
+Implementation is carried by child changes, one at a time; this change's task list and spec deltas shrink as each child takes its slice, and it archives once the program closes. Child order (medium cut, agreed 2026-09-24):
+
+1. `astrology-engine-gate` — `packages/astrology` seam, `caelus`, the Swiss Ephemeris accuracy gate, pinned verdict.
+2. `astrology-service-foundation` — `AstroProfile` storage, MCP service (trusted identity, place and timezone resolution, profile tools), fork-owned build and compose sidecar, development deployment.
+3. `astrologer-natal` — natal tool, instructions v1, model spec and MCP entry, model evaluation.
+4. `astrologer-transits`, `astrologer-horary`, `astrologer-elective` — one method each, one deployment each.
+5. `astrology-tls-production` — TLS and production rollout, tracked separately.
+
+Documentation mapping for `vera-docs/` (each child's tasks name the exact page and the `index.md` files on its path):
+
+| Child | `vera-docs/` work |
+| --- | --- |
+| `astrology-engine-gate` | none; the engine record lives in `packages/astrology/README.md` |
+| `astrology-service-foundation` | create `astrology.md` (fork architecture, service deployment settings, operations, deferred-capability list) and add its row to `index.md`; update `deployment.md` (sidecar service, `Dockerfile.vera` and its upstream-sync drift note, operator environment keys, `docker ps` expectation, development-only/TLS caveat); add the new conflict hot spots to `fork-workflow.md` (`Dockerfile.vera`, `deploy-compose.vera.yml`, the workflow `file:` selection, `scripts/sort-imports.mts`, `eslint.config.mjs`) |
+| `astrologer-natal` | complete the `librechat.yaml` block in `deployment.md`; extend `astrology.md` with agent behavior, the pinned model, the MCP entry and `allowedAddresses` |
+| `astrologer-transits`, `astrologer-horary`, `astrologer-elective` | extend `astrology.md`: supported techniques grow, the deferred list shrinks |
+| `astrology-tls-production` | update `deployment.md` (TLS, production sidecar, remove the development-only caveat) and the `index.md` page summary if it mentions development-only |
+
+Each child's `proposal.md` links back here for the full behavior contract and the decisions in `design.md`.
+
 ## Capabilities
 
 ### New Capabilities
@@ -35,5 +57,5 @@ Deferred, explicit non-goals of this change: synastry, composite, secondary prog
 - Operator configuration (not a committed change: `librechat.yaml` is gitignored and lives on the droplet): `mcpServers.astrology`, `mcpSettings.allowedAddresses`, and the `vera-astrologer` model spec are added when the feature is deployed; the exact block is documented in `vera-docs/deployment.md`.
 - `Dockerfile.vera`, `.github/workflows/deploy-*.yml` (the `file:` selection), and `deploy-compose.vera.yml`: build stages and the sidecar service, development droplet only. Upstream `Dockerfile.multi` is not edited.
 - No client changes; `packages/api` behavior unchanged; no breaking changes. There is no runtime feature flag: the feature exists where its YAML entries and sidecar are deployed, so enabling or disabling it is a deployment step, not a switch.
-- Documentation: add `vera-docs/astrology.md` and update the page table in `vera-docs/index.md`; update `vera-docs/deployment.md` for the sidecar service, its operator-owned settings, the `librechat.yaml` block, and the `Dockerfile.vera` choice; note the new upstream-file conflict hot spots in `vera-docs/fork-workflow.md`. The `vera-docs/drafts/` drafts (including their `index.md`) are removed by this change; the instructions are written fresh from the requirements document.
+- Documentation: add `vera-docs/astrology.md` and update the page table in `vera-docs/index.md`; update `vera-docs/deployment.md` for the sidecar service, its operator-owned settings, the `librechat.yaml` block, and the `Dockerfile.vera` choice; note the new upstream-file conflict hot spots in `vera-docs/fork-workflow.md`.
 - Dependencies: `caelus` (MIT ephemeris/chart library), `@modelcontextprotocol/sdk`, a geocoding provider client, and an IANA timezone resolver. The geocoding provider and the timezone/DST resolver (candidates: `caelus-birth`, `luxon`/`moment-timezone`, or Node's ICU data) are deliberately chosen during implementation and recorded as open questions in `design.md`.

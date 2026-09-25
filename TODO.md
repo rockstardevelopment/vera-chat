@@ -9,3 +9,5 @@
 - [ ] prio - what we can, ads, external
 - [ ] review development deployment flow implemented
 - [ ] implement code review
+- [ ] describe agents architecture with separate doc
+- [ ] how fixtures were generated in packages/astrology
